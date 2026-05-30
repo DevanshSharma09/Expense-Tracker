@@ -4,8 +4,9 @@ import axios from 'axios';
 
 export const AuthContext = createContext();
 
-const AUTH_URL = 'http://10.37.204.205:5000/api/auth';
-const EXPENSES_URL = 'http://10.37.204.205:5000/api/expenses';
+// ✅ REPLACED:
+const AUTH_URL = import.meta.env.VITE_API_URL;
+const EXPENSES_URL = import.meta.env.VITE_BACKEND_URL;
 const BALANCE_STORAGE_KEY = 'simpleBalanceSettings';
 
 const formatCurrency = (amount) =>
