@@ -23,6 +23,22 @@ const expenseSchema = new mongoose.Schema({
     type: String,
     required: true,
     default: 'personal'
+  },
+  participantId: {
+    type: String,
+    default: ''
+  },
+  participantName: {
+    type: String,
+    default: ''
+  },
+  sharedUser: {
+    type: String,
+    default: ''
+  },
+  walletMode: {
+    type: String,
+    default: 'personal'
   }
 }, { 
   timestamps: true,

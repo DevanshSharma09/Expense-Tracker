@@ -9,6 +9,7 @@ const authRoutes = require('./routes/authRoutes')
 const expenseRoutes = require('./routes/expenseRoutes')
 const budgetRoutes = require('./routes/budgetRoutes')
 const incomeRoutes = require('./routes/incomeRoutes') // <-- 1. ADD THIS IMPORT
+const ledgerRoutes = require('./routes/ledgerRoutes')
 
 connectDB()
 
@@ -22,6 +23,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/expenses', expenseRoutes)
 app.use('/api/budgets', budgetRoutes)
 app.use('/api/income', incomeRoutes) // <-- 2. ADD THIS MOUNT
+app.use('/api/ledger', ledgerRoutes)
 
 app.get('/', (req, res) => {
   res.send('Expense Tracker API is running')

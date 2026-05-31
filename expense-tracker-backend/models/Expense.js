@@ -23,6 +23,23 @@ const expenseSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    chargedFromPool: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      index: true,
+    },
+    participantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null,
+      index: true,
+    },
+    participantName: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     walletMode: {
       type: String,
       enum: ['personal', 'shared'],
@@ -37,5 +54,17 @@ const expenseSchema = new mongoose.Schema(
   },
   { timestamps: true, strict: false }
 )
+
+expenseSchema.add({
+  timestamp: {
+    type: Date,
+    default: Date.now,
+    index: true,
+  },
+})
+
+expenseSchema.pre('validate', function normalizeExpense() {
+  if (typeof this.chargedFromPool === 'string') this.chargedFromPool = this.chargedFromPool.trim().toLowerCase()
+})
 
 module.exports = mongoose.model('Expense', expenseSchema)

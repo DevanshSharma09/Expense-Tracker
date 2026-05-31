@@ -1,12 +1,19 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
+import AuthPage from './components/auth/AuthPage';
+import EnterpriseDashboard from './components/dashboard/EnterpriseDashboard';
 
 export const AuthContext = createContext();
 
 // ✅ REPLACED:
-const AUTH_URL = import.meta.env.VITE_API_URL;
-const EXPENSES_URL = import.meta.env.VITE_BACKEND_URL;
+const API_ROOT =
+  import.meta.env.VITE_API_ROOT ||
+  (import.meta.env.VITE_API_URL || '').replace(/\/auth\/?$/, '') ||
+  (import.meta.env.VITE_BACKEND_URL || '').replace(/\/expenses\/?$/, '') ||
+  'http://localhost:5000/api';
+const AUTH_URL = `${API_ROOT}/auth`;
+const EXPENSES_URL = `${API_ROOT}/expenses`;
 const BALANCE_STORAGE_KEY = 'simpleBalanceSettings';
 
 const formatCurrency = (amount) =>
@@ -100,7 +107,7 @@ export default function App() {
             </>
           ) : (
             <>
-              <Route path="/dashboard" element={<DashboardWeb />} />
+              <Route path="/dashboard" element={<EnterpriseDashboard userToken={userToken} logout={logout} apiRoot={API_ROOT} />} />
               <Route path="*" element={<Navigate to="/dashboard" />} />
             </>
           )}
@@ -112,44 +119,14 @@ export default function App() {
 
 function LoginWeb() {
   const { login } = React.useContext(AuthContext);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
-  return (
-    <div style={styles.authPage}>
-      <div style={styles.authCard}>
-        <h2 style={styles.authTitle}>Login</h2>
-        <input style={styles.input} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input style={styles.input} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <button style={styles.primaryButton} onClick={() => login(email, password)}>Sign In</button>
-        <p style={styles.switchText}>
-          Don't have an account? <a href="/register" style={styles.link}>Register here</a>
-        </p>
-      </div>
-    </div>
-  );
+  return <AuthPage mode="login" onSubmit={({ email, password }) => login(email, password)} />;
 }
 
 function RegisterWeb() {
   const { register } = React.useContext(AuthContext);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
-  return (
-    <div style={styles.authPage}>
-      <div style={styles.authCard}>
-        <h2 style={styles.authTitle}>Register</h2>
-        <input style={styles.input} type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-        <input style={styles.input} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input style={styles.input} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <button style={styles.primaryButton} onClick={() => register(name, email, password)}>Sign Up</button>
-        <p style={styles.switchText}>
-          Already have an account? <a href="/login" style={styles.link}>Login here</a>
-        </p>
-      </div>
-    </div>
-  );
+  return <AuthPage mode="register" onSubmit={({ name, email, password }) => register(name, email, password)} />;
 }
 
 function DashboardWeb() {

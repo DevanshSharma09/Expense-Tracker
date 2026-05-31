@@ -1,4 +1,5 @@
 const Expense = require('../models/Expense')
+const Ledger = require('../models/Ledger')
 
 const getUserExpenseFilter = (userId) => ({
   $or: [{ userId }, { user: userId }],
@@ -18,6 +19,8 @@ const normalizeSharedUser = (sharedUser) => {
   if (typeof sharedUser !== 'string') return ''
   return sharedUser.trim()
 }
+
+const normalizeName = (name) => String(name || '').trim().toLowerCase()
 
 const isSharedExpense = (expense) => {
   if (expense.walletMode === 'shared') return true
@@ -45,7 +48,7 @@ const getSimpleBalanceSheet = async (userId) => {
 
 const addExpense = async (req, res) => {
   try {
-    const { title, amount, category, walletMode, sharedUser } = req.body
+    const { title, amount, category, walletMode, sharedUser, participantId, chargedFromPool } = req.body
     const parsedAmount = toAmount(amount)
     const cleanWalletMode = normalizeWalletMode(walletMode)
     const cleanSharedUser = normalizeSharedUser(sharedUser)
@@ -54,8 +57,32 @@ const addExpense = async (req, res) => {
       return res.status(400).json({ message: 'Please enter a title, category, and a valid amount.' })
     }
 
-    if (cleanWalletMode === 'shared' && !cleanSharedUser) {
-      return res.status(400).json({ message: "Please enter your friend's name." })
+    const ledger = await Ledger.findOne({ ownerId: req.user.id })
+    const normalizedPool = normalizeName(chargedFromPool || sharedUser)
+    const participant =
+      participantId && ledger
+        ? ledger.participants.id(participantId)
+        : ledger?.participants.find((item) => normalizeName(item.name) === normalizedPool)
+
+    if (!participant) {
+      return res.status(400).json({ message: 'Please select a valid pool to charge this expense.' })
+    }
+
+    if (participant.isPersonalPool && parsedAmount > (Number(participant.currentBalance) || 0)) {
+      const balance = Number(participant.currentBalance) || 0
+      const message =
+        'Warning: Your balance is empty. Please select another person only if this expense should be paid from their balance.'
+      return res.status(400).json({ message })
+    }
+
+    if (ledger && category.trim() && !ledger.customCategories.includes(category.trim())) {
+      const standardCategories = ['Food', 'Rent', 'Salary', 'Travel', 'Subscription', 'Utilities', 'Healthcare', 'Other']
+      if (!standardCategories.includes(category.trim())) {
+        ledger.customCategories.push(category.trim())
+        ledger.logs.unshift({ type: 'category', message: `${category.trim()} added as a custom category.` })
+        ledger.logs = ledger.logs.slice(0, 120)
+        await ledger.save()
+      }
     }
 
     const expense = await Expense.create({
@@ -63,9 +90,18 @@ const addExpense = async (req, res) => {
       title: title.trim(),
       amount: parsedAmount,
       category: category.trim(),
-      walletMode: cleanWalletMode,
-      sharedUser: cleanWalletMode === 'shared' ? cleanSharedUser : '',
+      participantId: participant?._id || null,
+      participantName: participant?.name || '',
+      walletMode: participant ? (participant.isPersonalPool ? 'personal' : 'shared') : cleanWalletMode,
+      sharedUser: participant ? participant.name : cleanWalletMode === 'shared' ? cleanSharedUser : '',
+      chargedFromPool: normalizeName(participant.name),
+      timestamp: new Date(),
     })
+
+    participant.currentBalance = (Number(participant.currentBalance) || 0) - parsedAmount
+    ledger.logs.unshift({ type: 'expense', message: `${expense.title} charged from ${expense.chargedFromPool}.`, metadata: { amount: parsedAmount } })
+    ledger.logs = ledger.logs.slice(0, 120)
+    await ledger.save()
 
     res.status(201).json(expense)
   } catch (error) {
