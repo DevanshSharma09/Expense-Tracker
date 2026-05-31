@@ -61,9 +61,9 @@ function Panel({ children, className = '' }) {
 
 function PageHeader({ title, subtitle, actions }) {
   return (
-    <header className="flex flex-col gap-4 rounded-lg border border-white/10 bg-[#1e1e1e] p-5 sm:flex-row sm:items-center sm:justify-between">
+    <header className="flex flex-col gap-3 rounded-lg border border-white/10 bg-[#1e1e1e] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
       <div>
-        <h2 className="text-2xl font-semibold text-white">{title}</h2>
+        <h2 className="text-2xl font-semibold text-white sm:text-3xl">{title}</h2>
         <p className="mt-2 text-sm text-zinc-400">{subtitle}</p>
       </div>
       {actions}
@@ -117,9 +117,9 @@ function MetricCard({ label, value, accent = 'mint', detail }) {
   };
 
   return (
-    <Panel className={cx('min-h-[132px] border-l-2', colors[accent])}>
+    <Panel className={cx('min-h-[112px] border-l-2 p-4 sm:min-h-[132px] sm:p-5', colors[accent])}>
       <p className="text-sm text-zinc-400">{label}</p>
-      <h3 className="mt-4 text-3xl font-semibold text-white">{value}</h3>
+      <h3 className="mt-3 text-3xl font-semibold text-white sm:mt-4">{value}</h3>
       <p className={cx('mt-3 text-xs', colors[accent]?.split(' ').at(-1))}>{detail || 'current amount'}</p>
     </Panel>
   );
@@ -300,7 +300,7 @@ function TransactionsView({
             <h3 className="text-lg font-semibold text-white">Transactions</h3>
             <p className="mt-1 text-sm text-zinc-500">{expenses.length} transactions</p>
           </div>
-          <div className="overflow-hidden rounded-lg border border-white/10">
+          <div className="overflow-x-auto rounded-lg border border-white/10">
             <table className="w-full min-w-[720px] border-collapse text-left text-sm">
               <thead className="bg-[#121212] text-xs text-zinc-500">
                 <tr>
@@ -792,13 +792,22 @@ export default function EnterpriseDashboard({ userToken, logout, apiRoot }) {
       <Sidebar activeSection={activeSection} onChange={setActiveSection} logout={logout} />
 
       <main className="lg:pl-[17.5rem]">
-        <div className="mx-auto max-w-[1240px] space-y-4 px-4 py-3 sm:px-6">
-          <div className="flex items-center justify-between rounded-lg border border-white/10 bg-[#1e1e1e] p-3 lg:hidden">
-            <span className="font-semibold">Smart Expense Book</span>
+        <div className="mx-auto max-w-[1240px] space-y-4 px-3 py-3 sm:px-6">
+          <div className="grid gap-3 rounded-lg border border-white/10 bg-[#1e1e1e] p-3 lg:hidden">
+            <div className="flex items-center justify-between gap-3">
+              <span className="min-w-0 truncate text-base font-semibold">Smart Expense Book</span>
+              <button
+                type="button"
+                onClick={logout}
+                className="h-10 shrink-0 rounded-md border border-amber-300/25 px-3 text-sm text-amber-100"
+              >
+                Logout
+              </button>
+            </div>
             <select
               value={activeSection}
               onChange={(event) => setActiveSection(event.target.value)}
-              className="h-10 rounded-md border border-white/10 bg-[#121212] px-3 text-sm"
+              className="h-11 w-full rounded-md border border-white/10 bg-[#121212] px-3 text-sm"
             >
               {sections.map((section) => (
                 <option key={section} value={section}>

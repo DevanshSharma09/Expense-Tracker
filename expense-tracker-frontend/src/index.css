@@ -17,7 +17,22 @@ body {
   background: #050506;
 }
 
+html {
+  background: #121212;
+}
+
+body {
+  overflow-x: hidden;
+}
+
 button,
-input {
+input,
+select {
   font: inherit;
+}
+
+@media (max-width: 640px) {
+  table {
+    white-space: nowrap;
+  }
 }

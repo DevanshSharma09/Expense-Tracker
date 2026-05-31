@@ -7,11 +7,26 @@ import EnterpriseDashboard from './components/dashboard/EnterpriseDashboard';
 export const AuthContext = createContext();
 
 // ✅ REPLACED:
-const API_ROOT =
-  import.meta.env.VITE_API_ROOT ||
-  (import.meta.env.VITE_API_URL || '').replace(/\/auth\/?$/, '') ||
-  (import.meta.env.VITE_BACKEND_URL || '').replace(/\/expenses\/?$/, '') ||
-  'http://localhost:5000/api';
+const LOCAL_API_ROOT = 'http://localhost:5000/api';
+const PRODUCTION_API_ROOT = 'https://expense-tracker-b9qj.onrender.com/api';
+const isLocalBrowser =
+  typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+const cleanApiRoot = (value) =>
+  String(value || '')
+    .replace(/\/auth\/?$/, '')
+    .replace(/\/expenses\/?$/, '')
+    .replace(/\/$/, '');
+
+const configuredApiRoot = cleanApiRoot(
+  import.meta.env.VITE_API_ROOT || import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL
+);
+const configuredIsLocal = configuredApiRoot.includes('localhost') || configuredApiRoot.includes('127.0.0.1');
+const API_ROOT = isLocalBrowser
+  ? configuredApiRoot || LOCAL_API_ROOT
+  : configuredApiRoot && !configuredIsLocal
+    ? configuredApiRoot
+    : PRODUCTION_API_ROOT;
 const AUTH_URL = `${API_ROOT}/auth`;
 const EXPENSES_URL = `${API_ROOT}/expenses`;
 const BALANCE_STORAGE_KEY = 'simpleBalanceSettings';
